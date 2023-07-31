@@ -37,7 +37,11 @@ export class ArtistService {
 
     const updatedArtist = {
       ...artist,
-      grammy: updateArtistDto.grammy,
+      name: updateArtistDto.name ? updateArtistDto.name : artist.name,
+      grammy:
+        updateArtistDto.grammy !== undefined
+          ? updateArtistDto.grammy
+          : artist.grammy,
     };
 
     await this.dbService.updateArtistById(id, updatedArtist);

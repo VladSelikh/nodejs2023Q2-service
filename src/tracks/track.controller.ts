@@ -50,7 +50,8 @@ export class TrackController {
 
   @Post()
   async create(
-    @Body(ValidationPipe) createTrackDto: CreateTrackDto,
+    @Body(new ValidationPipe({ transform: true }))
+    createTrackDto: CreateTrackDto,
   ): Promise<Track> {
     if (createTrackDto.albumId) {
       const album = await this.albumService.findById(createTrackDto.albumId);

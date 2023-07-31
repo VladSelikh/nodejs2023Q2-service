@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsNotEmpty } from 'class-validator';
+import { IsString, IsInt, IsOptional, IsNotEmpty } from 'class-validator';
 import { IsUUIDorNull } from '../../core/validator';
 import { PartialType } from '@nestjs/mapped-types';
 
@@ -7,11 +7,13 @@ export class CreateTrackDto {
   @IsString()
   name: string;
 
+  @IsOptional()
   @IsUUIDorNull()
-  artistId: string | null;
+  artistId: string | null = null;
 
+  @IsOptional()
   @IsUUIDorNull()
-  albumId: string | null;
+  albumId: string | null = null;
 
   @IsNotEmpty()
   @IsInt()

@@ -40,7 +40,8 @@ export class ArtistController {
 
   @Post()
   public async create(
-    @Body(ValidationPipe) createArtistDto: CreateArtistDto,
+    @Body(new ValidationPipe({ transform: true }))
+    createArtistDto: CreateArtistDto,
   ): Promise<Artist> {
     return this.artistService.create(createArtistDto);
   }

@@ -42,7 +42,8 @@ export class AlbumController {
 
   @Post()
   public async create(
-    @Body(ValidationPipe) createAlbumDto: CreateAlbumDto,
+    @Body(new ValidationPipe({ transform: true }))
+    createAlbumDto: CreateAlbumDto,
   ): Promise<Album> {
     if (createAlbumDto.artistId) {
       const artist = await this.artistService.findById(createAlbumDto.artistId);
