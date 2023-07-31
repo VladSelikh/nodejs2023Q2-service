@@ -13,18 +13,20 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { CreateArtistDto, UpdateArtistDto } from './dto/artist.dto';
-import { AlbumService } from 'src/albums/album.service';
+import { FavoritesService } from '../favorites/favorites.service';
+import { AlbumService } from '../albums/album.service';
 import { ArtistService } from './artist.service';
-import { TrackService } from 'src/tracks/track.service';
+import { TrackService } from '../tracks/track.service';
 import { Artist } from './interfaces/artist.interface';
-import { ARTIST_NOT_FOUND } from 'src/core/constants';
+import { ARTIST_NOT_FOUND } from '../core/constants';
 
 @Controller('artist')
 export class ArtistController {
   constructor(
-    private readonly artistService: ArtistService,
+    private artistService: ArtistService,
     private albumService: AlbumService,
     private trackService: TrackService,
+    private favoritesService: FavoritesService,
   ) {}
 
   @Get()
@@ -87,5 +89,11 @@ export class ArtistController {
         this.trackService.updateById(track.id, { artistId: null });
       }
     });
+
+    const favorites = this.favoritesService.findArtists();
+    const isFav = favorites.includes(id);
+    if (isFav) {
+      this.favoritesService.removeArtistById(id);
+    }
   }
 }

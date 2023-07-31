@@ -2,18 +2,19 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Param,
   Body,
   HttpException,
   HttpStatus,
+  HttpCode,
   ParseUUIDPipe,
   ValidationPipe,
 } from '@nestjs/common';
-import { Put } from '@nestjs/common/decorators';
-import { HttpCode } from '@nestjs/common/decorators/http/http-code.decorator';
-import { Delete } from '@nestjs/common/decorators/http/request-mapping.decorator';
 import { AlbumService } from '../albums/album.service';
 import { ArtistService } from '../artists/artist.service';
+import { FavoritesService } from '../favorites/favorites.service';
 import { CreateTrackDto, UpdateTrackDto } from './dto/track.dto';
 import { Track } from './interfaces/track.interface';
 import { TrackService } from './track.service';
@@ -29,6 +30,7 @@ export class TrackController {
     private trackService: TrackService,
     private albumService: AlbumService,
     private artistService: ArtistService,
+    private favoritesService: FavoritesService,
   ) {}
 
   @Get()
@@ -105,5 +107,11 @@ export class TrackController {
     }
 
     this.trackService.deleteById(id);
+
+    const favorites = this.favoritesService.findTracks();
+    const isFav = favorites.includes(id);
+    if (isFav) {
+      this.favoritesService.removeTrackById(id);
+    }
   }
 }
