@@ -3,20 +3,21 @@ import { v4 as uuid } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { User } from './interfaces/user.interface';
+import { DBService } from '../db/db.service';
 
 @Injectable()
 export class UserService {
-  private readonly users: User[] = [];
+  constructor(private dbService: DBService) {}
 
-  public findAll(): User[] {
-    return this.users;
+  public async findAll(): Promise<User[]> {
+    return this.dbService.getAllUsers();
   }
 
-  public findById(id: string): User {
-    return this.users.find((user) => user.id === id);
+  public async findById(id: string): Promise<User> {
+    return this.dbService.getUserById(id);
   }
 
-  public create(userDto: CreateUserDto): User {
+  public async create(userDto: CreateUserDto): Promise<User> {
     const id = uuid();
     const version = 1;
     const createdAt = Date.now();
@@ -31,13 +32,16 @@ export class UserService {
       updatedAt: createdAt,
     };
 
-    this.users.push(newUser);
+    await this.dbService.createUser(newUser);
 
     return newUser;
   }
 
-  public updateById(id: string, passwordDto: UpdatePasswordDto): User {
-    const user = this.users.find((user) => user.id === id);
+  public async updateById(
+    id: string,
+    passwordDto: UpdatePasswordDto,
+  ): Promise<User> {
+    const user = await this.dbService.getUserById(id);
 
     const updatedUser: User = {
       ...user,
@@ -46,14 +50,12 @@ export class UserService {
       updatedAt: Date.now(),
     };
 
-    const userIndex = this.users.findIndex((user) => user.id === id);
-    this.users[userIndex] = updatedUser;
+    await this.dbService.updateUserById(id, updatedUser);
 
     return updatedUser;
   }
 
-  public deleteById(id: string) {
-    const userIndex = this.users.findIndex((user) => user.id === id);
-    this.users.splice(userIndex, 1);
+  public async deleteById(id: string) {
+    await this.dbService.deleteUserById(id);
   }
 }

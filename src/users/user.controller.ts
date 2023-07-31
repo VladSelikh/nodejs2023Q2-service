@@ -19,11 +19,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { User } from './interfaces/user.interface';
 import { UserResponse } from './types/user.response';
 import { UserService } from './user.service';
-import {
-  INVALID_BODY,
-  NOT_VALID_UUID,
-  USER_NOT_FOUND,
-} from '../core/constants';
+import { USER_NOT_FOUND } from '../core/constants';
 
 @Controller('user')
 export class UserController {
@@ -38,7 +34,7 @@ export class UserController {
   public async findById(
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<UserResponse> {
-    const user = this.userService.findById(id);
+    const user = await this.userService.findById(id);
 
     if (!user) {
       throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
@@ -53,7 +49,7 @@ export class UserController {
   public async create(
     @Body(ValidationPipe) createUserDto: CreateUserDto,
   ): Promise<UserResponse> {
-    const newUser = this.userService.create(createUserDto);
+    const newUser = await this.userService.create(createUserDto);
     const { password, ...userResponse } = newUser;
 
     return userResponse;
@@ -64,7 +60,7 @@ export class UserController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body(ValidationPipe) updatePasswordDto: UpdatePasswordDto,
   ): Promise<UserResponse> {
-    const user = this.userService.findById(id);
+    const user = await this.userService.findById(id);
     if (!user) {
       throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
@@ -76,7 +72,10 @@ export class UserController {
       );
     }
 
-    const updatedUser = this.userService.updateById(user.id, updatePasswordDto);
+    const updatedUser = await this.userService.updateById(
+      user.id,
+      updatePasswordDto,
+    );
 
     const { password, ...userResponse } = updatedUser;
     return userResponse;
@@ -85,7 +84,7 @@ export class UserController {
   @Delete(':id')
   @HttpCode(204)
   public async deleteById(@Param('id', new ParseUUIDPipe()) id: string) {
-    const user = this.userService.findById(id);
+    const user = await this.userService.findById(id);
     if (!user) {
       throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
     }

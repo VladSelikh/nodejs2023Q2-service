@@ -14,8 +14,6 @@ import {
 } from '@nestjs/common';
 import { ArtistService } from '../artists/artist.service';
 import { AlbumService } from './album.service';
-import { TrackService } from 'src/tracks/track.service';
-import { FavoritesService } from 'src/favorites/favorites.service';
 import { CreateAlbumDto, UpdateAlbumDto } from './dto/album.dto';
 import { Album } from './interfaces/album.interface';
 import { ALBUM_NOT_FOUND, ARTIST_NOT_FOUND } from '../core/constants';
@@ -25,8 +23,6 @@ export class AlbumController {
   constructor(
     private albumService: AlbumService,
     private artistService: ArtistService,
-    private trackService: TrackService,
-    private favoritesService: FavoritesService,
   ) {}
 
   @Get()
@@ -36,7 +32,7 @@ export class AlbumController {
 
   @Get(':id')
   async findById(@Param('id', new ParseUUIDPipe()) id: string): Promise<Album> {
-    const album = this.albumService.findById(id);
+    const album = await this.albumService.findById(id);
     if (!album) {
       throw new HttpException(ALBUM_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
@@ -49,7 +45,7 @@ export class AlbumController {
     @Body(ValidationPipe) createAlbumDto: CreateAlbumDto,
   ): Promise<Album> {
     if (createAlbumDto.artistId) {
-      const artist = this.artistService.findById(createAlbumDto.artistId);
+      const artist = await this.artistService.findById(createAlbumDto.artistId);
       if (!artist) {
         throw new HttpException(ARTIST_NOT_FOUND, HttpStatus.NOT_FOUND);
       }
@@ -64,7 +60,7 @@ export class AlbumController {
     @Body(ValidationPipe) updateAlbumDto: UpdateAlbumDto,
   ): Promise<Album> {
     if (updateAlbumDto.artistId) {
-      const artist = this.artistService.findById(updateAlbumDto.artistId);
+      const artist = await this.artistService.findById(updateAlbumDto.artistId);
       if (!artist) {
         throw new HttpException(ARTIST_NOT_FOUND, HttpStatus.NOT_FOUND);
       }
@@ -81,24 +77,11 @@ export class AlbumController {
   @Delete(':id')
   @HttpCode(204)
   public async deleteById(@Param('id', new ParseUUIDPipe()) id: string) {
-    const album = this.albumService.findById(id);
+    const album = await this.albumService.findById(id);
     if (!album) {
       throw new HttpException(ALBUM_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
     this.albumService.deleteById(id);
-
-    const tracks = this.trackService.findAll();
-    tracks.forEach((track) => {
-      if (track.albumId === id) {
-        this.trackService.updateById(track.id, { albumId: null });
-      }
-    });
-
-    const favorites = this.favoritesService.findAlbums();
-    const isFav = favorites.includes(id);
-    if (isFav) {
-      this.favoritesService.removeAlbumById(id);
-    }
   }
 }

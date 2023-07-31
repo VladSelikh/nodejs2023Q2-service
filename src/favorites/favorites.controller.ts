@@ -18,7 +18,7 @@ import {
   ALBUM_NOT_FOUND,
   ARTIST_NOT_FOUND,
   TRACK_NOT_FOUND,
-} from 'src/core/constants';
+} from '../core/constants';
 
 @Controller('favs')
 export class FavoritesController {
@@ -30,25 +30,15 @@ export class FavoritesController {
   ) {}
 
   @Get()
-  async findAll(): Promise<FavoritesResponse> {
-    const favIds = this.favoritesService.findAll();
-
-    const artists = favIds.artists.map((id) => this.artistService.findById(id));
-    const albums = favIds.albums.map((id) => this.albumService.findById(id));
-    const tracks = favIds.tracks.map((id) => this.trackService.findById(id));
-
-    return {
-      artists,
-      albums,
-      tracks,
-    };
+  public async findAll(): Promise<FavoritesResponse> {
+    return this.favoritesService.findAll();
   }
 
   @Post('track/:id')
-  async addTrackById(
+  public async addTrackById(
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<string> {
-    const track = this.trackService.findById(id);
+    const track = await this.trackService.findById(id);
     if (!track) {
       throw new HttpException(TRACK_NOT_FOUND, HttpStatus.UNPROCESSABLE_ENTITY);
     }
@@ -58,8 +48,8 @@ export class FavoritesController {
 
   @Delete('track/:id')
   @HttpCode(204)
-  async removeTrack(@Param('id', new ParseUUIDPipe()) id: string) {
-    const isFav = this.favoritesService.findTracks().includes(id);
+  public async removeTrack(@Param('id', new ParseUUIDPipe()) id: string) {
+    const isFav = (await this.favoritesService.findTracks()).includes(id);
     if (!isFav) {
       throw new HttpException(
         'Track with specified id is not in favorites!',
@@ -67,14 +57,14 @@ export class FavoritesController {
       );
     }
 
-    this.favoritesService.removeTrackById(id);
+    await this.favoritesService.removeTrackById(id);
   }
 
   @Post('album/:id')
-  async addAlbum(
+  public async addAlbum(
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<string> {
-    const album = this.albumService.findById(id);
+    const album = await this.albumService.findById(id);
     if (!album) {
       throw new HttpException(ALBUM_NOT_FOUND, HttpStatus.UNPROCESSABLE_ENTITY);
     }
@@ -84,8 +74,8 @@ export class FavoritesController {
 
   @Delete('album/:id')
   @HttpCode(204)
-  async removeAlbum(@Param('id', new ParseUUIDPipe()) id: string) {
-    const isFav = this.favoritesService.findAlbums().includes(id);
+  public async removeAlbum(@Param('id', new ParseUUIDPipe()) id: string) {
+    const isFav = (await this.favoritesService.findAlbums()).includes(id);
     if (!isFav) {
       throw new HttpException(
         'Album with specified id is not in favorites!',
@@ -93,14 +83,14 @@ export class FavoritesController {
       );
     }
 
-    this.favoritesService.removeAlbumById(id);
+    await this.favoritesService.removeAlbumById(id);
   }
 
   @Post('artist/:id')
-  async addArtist(
+  public async addArtist(
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<string> {
-    const artist = this.artistService.findById(id);
+    const artist = await this.artistService.findById(id);
     if (!artist) {
       throw new HttpException(
         ARTIST_NOT_FOUND,
@@ -113,8 +103,8 @@ export class FavoritesController {
 
   @Delete('artist/:id')
   @HttpCode(204)
-  async removeArtist(@Param('id', new ParseUUIDPipe()) id: string) {
-    const isFav = this.favoritesService.findArtists().includes(id);
+  public async removeArtist(@Param('id', new ParseUUIDPipe()) id: string) {
+    const isFav = (await this.favoritesService.findArtists()).includes(id);
     if (!isFav) {
       throw new HttpException(
         'Artist with specified id is not in favorites!',
@@ -122,6 +112,6 @@ export class FavoritesController {
       );
     }
 
-    this.favoritesService.removeArtistById(id);
+    await this.favoritesService.removeArtistById(id);
   }
 }
