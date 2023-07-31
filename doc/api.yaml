@@ -45,6 +45,7 @@ components:
       required:
         - id
         - name
+        - grammy
     Album:
       type: object
       properties:
