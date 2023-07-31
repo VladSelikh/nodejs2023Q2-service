@@ -67,7 +67,7 @@ export class AlbumController {
       }
     }
 
-    const album = this.albumService.findById(id);
+    const album = await this.albumService.findById(id);
     if (!album) {
       throw new HttpException(ALBUM_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
