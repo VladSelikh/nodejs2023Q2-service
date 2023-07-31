@@ -53,7 +53,10 @@ export class UserController {
   public async create(
     @Body() createUserDto: CreateUserDto,
   ): Promise<UserResponse> {
-    if (!createUserDto.login || !createUserDto.password) {
+    if (
+      typeof createUserDto.login !== 'string' ||
+      typeof createUserDto.password !== 'string'
+    ) {
       throw new HttpException(INVALID_BODY, HttpStatus.BAD_REQUEST);
     }
 
@@ -64,7 +67,7 @@ export class UserController {
   }
 
   @Put(':id')
-  public async update(
+  public async updateById(
     @Param() params,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ): Promise<UserResponse> {
@@ -96,7 +99,7 @@ export class UserController {
 
   @Delete(':id')
   @HttpCode(204)
-  public async delete(@Param() params) {
+  public async deleteById(@Param() params) {
     if (!validate(params.id)) {
       throw new HttpException(NOT_VALID_UUID, HttpStatus.BAD_REQUEST);
     }
