@@ -9,21 +9,23 @@ import {
   Param,
   Post,
   Put,
+  ParseUUIDPipe,
+  ValidationPipe,
 } from '@nestjs/common';
-import { CreateArtistDto } from './dto/create-artist.dto';
-import { validate } from 'uuid';
+import { CreateArtistDto, UpdateArtistDto } from './dto/artist.dto';
+import { AlbumService } from 'src/albums/album.service';
 import { ArtistService } from './artist.service';
-import { UpdateArtistDto } from './dto/update-artist.dto';
+import { TrackService } from 'src/tracks/track.service';
 import { Artist } from './interfaces/artist.interface';
-import {
-  ARTIST_NOT_FOUND,
-  INVALID_BODY,
-  NOT_VALID_UUID,
-} from 'src/core/constants';
+import { ARTIST_NOT_FOUND } from 'src/core/constants';
 
 @Controller('artist')
 export class ArtistController {
-  constructor(private readonly artistService: ArtistService) {}
+  constructor(
+    private readonly artistService: ArtistService,
+    private albumService: AlbumService,
+    private trackService: TrackService,
+  ) {}
 
   @Get()
   public async findAll(): Promise<Artist[]> {
@@ -31,12 +33,10 @@ export class ArtistController {
   }
 
   @Get(':id')
-  public async findById(@Param() params): Promise<Artist> {
-    if (!validate(params.id)) {
-      throw new HttpException(NOT_VALID_UUID, HttpStatus.BAD_REQUEST);
-    }
-
-    const artist = this.artistService.findById(params.id);
+  public async findById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<Artist> {
+    const artist = this.artistService.findById(id);
     if (!artist) {
       throw new HttpException(ARTIST_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
@@ -45,53 +45,47 @@ export class ArtistController {
   }
 
   @Post()
-  async create(@Body() createArtistDto: CreateArtistDto): Promise<Artist> {
-    if (
-      typeof createArtistDto.name !== 'string' ||
-      typeof createArtistDto.grammy !== 'boolean'
-    ) {
-      throw new HttpException(INVALID_BODY, HttpStatus.BAD_REQUEST);
-    }
-
-    const newArtist = this.artistService.create(createArtistDto);
-    return newArtist;
+  async create(
+    @Body(ValidationPipe) createArtistDto: CreateArtistDto,
+  ): Promise<Artist> {
+    return this.artistService.create(createArtistDto);
   }
 
   @Put(':id')
   async updateById(
-    @Param() params,
-    @Body() updateArtistDto: UpdateArtistDto,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body(ValidationPipe) updateArtistDto: UpdateArtistDto,
   ): Promise<Artist> {
-    if (!validate(params.id)) {
-      throw new HttpException(NOT_VALID_UUID, HttpStatus.BAD_REQUEST);
-    }
-
-    if (typeof updateArtistDto.grammy !== 'boolean') {
-      throw new HttpException(INVALID_BODY, HttpStatus.BAD_REQUEST);
-    }
-
-    const artist = this.artistService.findById(params.id);
+    const artist = this.artistService.findById(id);
     if (!artist) {
       throw new HttpException(ARTIST_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
-    const newArtist = this.artistService.updateById(params.id, updateArtistDto);
-    return newArtist;
+    return this.artistService.updateById(id, updateArtistDto);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  async deleteById(@Param() params) {
-    if (!validate(params.id)) {
-      throw new HttpException(NOT_VALID_UUID, HttpStatus.BAD_REQUEST);
-    }
-
-    const artist = this.artistService.findById(params.id);
+  async deleteById(@Param('id', new ParseUUIDPipe()) id: string) {
+    const artist = this.artistService.findById(id);
     if (!artist) {
       throw new HttpException(ARTIST_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
-    this.artistService.deleteById(params.id);
-    return;
+    this.artistService.deleteById(id);
+
+    const albums = this.albumService.findAll();
+    albums.forEach((album) => {
+      if (album.artistId === id) {
+        this.albumService.updateById(album.id, { artistId: null });
+      }
+    });
+
+    const tracks = this.trackService.findAll();
+    tracks.forEach((track) => {
+      if (track.artistId === id) {
+        this.trackService.updateById(track.id, { artistId: null });
+      }
+    });
   }
 }

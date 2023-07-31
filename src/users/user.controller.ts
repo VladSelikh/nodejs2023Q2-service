@@ -10,6 +10,8 @@ import {
   Body,
   Delete,
   HttpCode,
+  ParseUUIDPipe,
+  ValidationPipe,
 } from '@nestjs/common';
 import { validate } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -33,12 +35,10 @@ export class UserController {
   }
 
   @Get(':id')
-  public async findById(@Param() params): Promise<UserResponse> {
-    if (!validate(params.id)) {
-      throw new HttpException(NOT_VALID_UUID, HttpStatus.BAD_REQUEST);
-    }
-
-    const user = this.userService.findById(params.id);
+  public async findById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<UserResponse> {
+    const user = this.userService.findById(id);
 
     if (!user) {
       throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
@@ -51,15 +51,8 @@ export class UserController {
 
   @Post()
   public async create(
-    @Body() createUserDto: CreateUserDto,
+    @Body(ValidationPipe) createUserDto: CreateUserDto,
   ): Promise<UserResponse> {
-    if (
-      typeof createUserDto.login !== 'string' ||
-      typeof createUserDto.password !== 'string'
-    ) {
-      throw new HttpException(INVALID_BODY, HttpStatus.BAD_REQUEST);
-    }
-
     const newUser = this.userService.create(createUserDto);
     const { password, ...userResponse } = newUser;
 
@@ -68,18 +61,10 @@ export class UserController {
 
   @Put(':id')
   public async updateById(
-    @Param() params,
-    @Body() updatePasswordDto: UpdatePasswordDto,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body(ValidationPipe) updatePasswordDto: UpdatePasswordDto,
   ): Promise<UserResponse> {
-    if (!validate(params.id)) {
-      throw new HttpException(NOT_VALID_UUID, HttpStatus.BAD_REQUEST);
-    }
-
-    if (!updatePasswordDto.oldPassword || !updatePasswordDto.newPassword) {
-      throw new HttpException(INVALID_BODY, HttpStatus.BAD_REQUEST);
-    }
-
-    const user = this.userService.findById(params.id);
+    const user = this.userService.findById(id);
     if (!user) {
       throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
@@ -99,12 +84,8 @@ export class UserController {
 
   @Delete(':id')
   @HttpCode(204)
-  public async deleteById(@Param() params) {
-    if (!validate(params.id)) {
-      throw new HttpException(NOT_VALID_UUID, HttpStatus.BAD_REQUEST);
-    }
-
-    const user = this.userService.findById(params.id);
+  public async deleteById(@Param('id', new ParseUUIDPipe()) id: string) {
+    const user = this.userService.findById(id);
     if (!user) {
       throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
